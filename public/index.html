@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>drawIt</title>
+    <style>
+        body{
+            margin: 0px;
+            padding: 0px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-items: center;
+            touch-action: none;
+        }
+        canvas{
+            box-shadow: rgb(206, 189, 189) 50px 10px 10px;
+            background: rgb(34, 34, 34);
+        }
+        .color-bar{
+            width: 25%;
+            height: 5%;
+            position: absolute;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 25px;
+            background-image: linear-gradient(to right, red , orange, yellow, green, blue, indigo, purple);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .color-picker{
+            width: 5%;
+            height: 110%;
+            border-radius: 3px;
+            background: white;
+            box-shadow: rgb(92, 92, 92) 1px 1px 1px;
+        }
+        .clear-text{
+            color: white;
+            font-size: x-large;
+            text-decoration: underline;
+            position: absolute;
+            bottom: 50%;
+        }
+    </style>
+</head>
+<body>
+    <text class="clear-text">Clear<text/>
+
+    <div class="color-bar" id="color-bar">
+        <div class="color-picker"></div>
+    </div>
+    
+    <canvas
+        id="drawIt"
+        width="100%"
+        height="100%"
+    >
+
+    </canvas>
+    <script src="drawItCanvas.js"></script>
+
+    
+        
+   
+</body>
+</html>
