@@ -28,7 +28,10 @@ type Point = {
 type Points = Point[]
 
 type Session = {
-  [userId: string]: Points
+  [userId: string]: {
+    user: User
+    points: Points
+  }
 }
 
 type Sessions = {
@@ -144,13 +147,18 @@ wss.on('connection', function connection(ws: WebSocket, req: Req) {
 
       switch (type) {
         case 'init':
-          const { points, sessionId } = data
+          const { points, sessionId } = data as {
+            points: Points
+            sessionId: string
+          }
           console.log('wss', 'message', 'init', points, sessionId)
-          let session = _SESSION[sessionId]
-          if (!session) {
-            _SESSION[sessionId] = {
-              [userId]: points,
-            }
+          if (!_SESSION[sessionId]) {
+            _SESSION[sessionId] = {}
+          }
+          const session = _SESSION[sessionId]
+          session[userId] = {
+            user,
+            points,
           }
           send({
             type: 'init',
