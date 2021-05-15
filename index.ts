@@ -173,12 +173,12 @@ wss.on('connection', function connection(ws: WebSocket, req: Req) {
             console.log('wss', 'message', 'init', sessionId, points)
             if (!_SESSION[sessionId]) {
               _SESSION[sessionId] = {}
+              _SESSION[sessionId][userId] = {
+                user,
+                points,
+              }
             }
             const session = _SESSION[sessionId]
-            session[userId] = {
-              user,
-              points,
-            }
             send({
               type: 'init',
               data: {
@@ -195,6 +195,8 @@ wss.on('connection', function connection(ws: WebSocket, req: Req) {
 
             const session = _SESSION[sessionId]
             session[userId].points.push(point)
+
+            console.log(session)
 
             for (const _userId in session) {
               if (_userId !== userId) {
