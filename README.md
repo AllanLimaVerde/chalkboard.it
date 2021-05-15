@@ -1,1 +1,3 @@
 # drawIt
+
+Collaborative drawing environment
