@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>drawIt</title>
     <style>
-        body{
+        body {
             margin: 0px;
             padding: 0px;
             display: flex;
@@ -15,11 +16,13 @@
             justify-items: center;
             touch-action: none;
         }
-        canvas{
+
+        canvas {
             box-shadow: rgb(206, 189, 189) 50px 10px 10px;
             background: rgb(34, 34, 34);
         }
-        .color-bar{
+
+        .color-bar {
             width: 300px;
             height: 5%;
             position: absolute;
@@ -28,13 +31,14 @@
             transform: translateX(-50%);
             border-radius: 6px;
             /* background-image: linear-gradient(to right, red , orange, yellow, green, blue, indigo, purple, red); */
-            background: linear-gradient(90deg, rgba(255,0,0,1) 0%, rgba(255,154,0,1) 10%, rgba(208,222,33,1) 20%, rgba(79,220,74,1) 30%, rgba(63,218,216,1) 40%, rgba(47,201,226,1) 50%, rgba(28,127,238,1) 60%, rgba(95,21,242,1) 70%, rgba(186,12,248,1) 80%, rgba(251,7,217,1) 90%, rgba(255,0,0,1) 100%);
+            background: linear-gradient(90deg, rgba(255, 0, 0, 1) 0%, rgba(255, 154, 0, 1) 10%, rgba(208, 222, 33, 1) 20%, rgba(79, 220, 74, 1) 30%, rgba(63, 218, 216, 1) 40%, rgba(47, 201, 226, 1) 50%, rgba(28, 127, 238, 1) 60%, rgba(95, 21, 242, 1) 70%, rgba(186, 12, 248, 1) 80%, rgba(251, 7, 217, 1) 90%, rgba(255, 0, 0, 1) 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
         }
-        .color-picker{
+
+        .color-picker {
             position: absolute;
             pointer-events: none;
             width: 5%;
@@ -46,7 +50,8 @@
             box-shadow: rgb(92, 92, 92) 1px 1px 1px;
             transform: translateX(-50%)
         }
-        .clear-text{
+
+        .clear-text {
             color: white;
             font-size: x-large;
             text-decoration: underline;
@@ -58,20 +63,17 @@
         }
     </style>
 </head>
+
 <body>
     <div class="clear-text" id="clear-text">
-        <text>Clear<text/>
+        <text>Clear<text />
     </div>
 
     <div class="color-bar" id="color-bar">
         <div class="color-picker" id="color-picker"></div>
     </div>
-    
-    <canvas
-        id="drawIt"
-        width="100%"
-        height="100%"
-    >
+
+    <canvas id="drawIt" width="100%" height="100%">
     </canvas>
 </body>
 <script>
@@ -103,7 +105,7 @@
 
     const clearScreen = () => {
         ctx.fillStyle = background;
-        ctx.fillRect(0,0,canvas.clientWidth, canvas.height)
+        ctx.fillRect(0, 0, canvas.clientWidth, canvas.height)
     }
 
     const onWindowResize = () => {
@@ -115,8 +117,8 @@
         buttonDown = true
         const pos = [event.clientX, event.clientY]
         drawPoint(pos, drawColor, drawSize)
-        
-        const point = {pos, color: drawColor, r: drawSize}
+
+        const point = { pos, color: drawColor, r: drawSize }
         pointsArray.push(point)
         sendPoint(point)
     }
@@ -141,11 +143,11 @@
 
     const mouseMove = event => {
         if (!buttonDown) return
-        
+
         const pos = [event.clientX, event.clientY]
         drawPoint(pos, drawColor, drawSize)
-        
-        const point = {pos, color: drawColor, r: drawSize}
+
+        const point = { pos, color: drawColor, r: drawSize }
         pointsArray.push(point)
         sendPoint(point)
     }
@@ -156,12 +158,12 @@
         const newXPos = Math.min(Math.max(event.offsetX, 0), 300)
 
         colorPicker.style.left = newXPos + 'px'
-        
+
         setColor(newXPos)
     }
 
     const wheel = event => {
-        drawSize -= event.deltaY/53
+        drawSize -= event.deltaY / 53
         if (drawSize < 0) drawSize = 0
     }
 
@@ -171,7 +173,7 @@
     }
 
     const setColor = xPos => {
-        drawColor = `hsl(${xPos*360/300}, 100%, 50%)`
+        drawColor = `hsl(${xPos * 360 / 300}, 100%, 50%)`
     }
 
     const sendPoint = point => {
@@ -195,21 +197,16 @@
     document.addEventListener('wheel', wheel)
 
 
-
-
-
-    
-
-    // const drawScreen = () => {
-    //     ctx.fillStyle = drawColor;
-    //     posArray.forEach(pos => {
-    //         ctx.beginPath()
-    //         ctx.arc(pos[0], pos[1], 50, 0, 2 * Math.PI)
-    //         ctx.fill()
-    //     })
-    // }
+    const drawScreen = () => {
+        console.log('he')
+        pointsArray.forEach(point => {
+            const { pos, color, r } = point
+            drawPoint(pos, color, r)
+        })
+    }
 
     const { hostname, pathname } = location
+    const userId = getDocumentCookieByName('userId')
 
     const localhost = hostname === 'localhost'
 
@@ -242,7 +239,7 @@
 
         socket = new WebSocket(url)
 
-        socket.addEventListener('open', function(event) {
+        socket.addEventListener('open', function (event) {
             console.log('socket', 'open')
             connected = true
             send({
@@ -254,7 +251,7 @@
             })
         })
 
-        socket.addEventListener('close', function(event) {
+        socket.addEventListener('close', function (event) {
             console.log('socket', 'close')
             connected = false
         })
@@ -262,7 +259,17 @@
         socket.addEventListener('message', event => {
             const { data: message } = event
             const data = JSON.parse(message)
-            console.log('socket', 'message', data)
+            // posArray = data.
+                console.log('socket', 'message', data)
+                const { type, data: _data } = data
+                const { session } = _data
+                for (const userId in session) {
+                    const userData = session[userId]
+                    const { points } = userData
+                    pointsArray = points
+                    console.log(pointsArray)
+                    drawScreen()
+                }
         })
 
         socket.addEventListener('error', event => {
@@ -274,6 +281,23 @@
         socket.close()
         socket = null
     }
+
+    function getDocumentCookieByName(name) {
+        const _name = name + '='
+        const decodedCookie = decodeURIComponent(document.cookie)
+        const ca = decodedCookie.split(';')
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i]
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1)
+            }
+            if (c.indexOf(_name) === 0) {
+                return c.substring(_name.length, c.length)
+            }
+        }
+        return ''
+    }
+
 
     connect()
 </script>
