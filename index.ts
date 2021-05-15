@@ -29,7 +29,9 @@ console.log(
         )
       ),
     []
-  )[0] + ':' + PORT
+  )[0] +
+    ':' +
+    PORT
 )
 
 console.log('NODE_ENV', NODE_ENV)
@@ -163,29 +165,43 @@ wss.on('connection', function connection(ws: WebSocket, req: Req) {
 
       switch (type) {
         case 'init':
-          const { points, sessionId } = data as {
-            points: Points
-            sessionId: string
-          }
-          console.log('wss', 'message', 'init', points, sessionId)
-          if (!_SESSION[sessionId]) {
-            _SESSION[sessionId] = {}
-          }
-          const session = _SESSION[sessionId]
-          session[userId] = {
-            user,
-            points,
-          }
-          send({
-            type: 'init',
-            data: {
-              session,
-            },
-          })
+          ;(() => {
+            const { points, sessionId } = data as {
+              points: Points
+              sessionId: string
+            }
+            console.log('wss', 'message', 'init', sessionId, points)
+            if (!_SESSION[sessionId]) {
+              _SESSION[sessionId] = {}
+            }
+            const session = _SESSION[sessionId]
+            session[userId] = {
+              user,
+              points,
+            }
+            send({
+              type: 'init',
+              data: {
+                session,
+              },
+            })
+          })()
           break
         case 'point':
-          const { point } = data
-          console.log('wss', 'message', 'point', data)
+          ;(() => {
+            const { point, sessionId } = data
+
+            console.log('wss', 'message', 'point', sessionId, point)
+
+            const session = _SESSION[sessionId]
+            session[userId].points.push(point)
+
+            for (const _userId in session) {
+              if (_userId !== userId) {
+                
+              }
+            }
+          })()
           break
       }
     } catch (err) {
