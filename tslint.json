@@ -1,0 +1,18 @@
+{
+  "extends": [
+    "tslint-config-prettier"
+  ],
+  "rules": {
+    "rulesDirectory": [
+      "tslint-plugin-prettier"
+    ],
+    "prettier": true
+  },
+  "jsRules": {
+    "max-line-length": {
+      "options": [
+        80
+      ]
+    }
+  }
+}
