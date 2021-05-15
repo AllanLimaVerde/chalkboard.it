@@ -105,7 +105,7 @@ app.use(async function(req: Req, res, next) {
   if (!userId || !_USER[userId]) {
     userId = await createUser()
     res.cookie(COOKIE_NAME_USER_ID, userId, {
-      httpOnly: true,
+      httpOnly: false,
       domain: hostname,
     })
   }
@@ -200,7 +200,23 @@ wss.on('connection', function connection(ws: WebSocket, req: Req) {
 
             for (const _userId in session) {
               if (_userId !== userId) {
-                
+              }
+            }
+          })()
+          break
+        case 'point':
+          ;(() => {
+            const { point, sessionId } = data
+
+            console.log('wss', 'message', 'point', sessionId, point)
+
+            const session = _SESSION[sessionId]
+            session[userId].points.push(point)
+
+            console.log(session)
+
+            for (const _userId in session) {
+              if (_userId !== userId) {
               }
             }
           })()
