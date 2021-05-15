@@ -4,6 +4,8 @@ import { v4 as uuidv4 } from 'uuid'
 import * as cookieParser from 'cookie-parser'
 import * as path from 'path'
 import * as cors from 'cors'
+import * as os from 'os'
+
 const nameGenerator = require('username-generator')
 
 const app = express()
@@ -15,6 +17,20 @@ const { NODE_ENV = 'development' } = process.env
 const dev = NODE_ENV === 'development'
 
 const CWD = process.cwd()
+
+console.log(
+  Object.values(os.networkInterfaces()).reduce(
+    (r, list) =>
+      r.concat(
+        list.reduce(
+          (rr, i) =>
+            rr.concat((i.family === 'IPv4' && !i.internal && i.address) || []),
+          []
+        )
+      ),
+    []
+  )[0] + ':' + PORT
+)
 
 console.log('NODE_ENV', NODE_ENV)
 console.log('CWD', CWD)
