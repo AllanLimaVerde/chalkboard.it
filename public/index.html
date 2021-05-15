@@ -115,7 +115,10 @@
         buttonDown = true
         const pos = [event.clientX, event.clientY]
         drawPoint(pos, drawColor, drawSize)
-        pointsArray.push({pos: pos, color: drawColor, r: drawSize})
+        
+        const point = {pos, color: drawColor, r: drawSize}
+        pointsArray.push(point)
+        sendPoint(point)
     }
 
     const mouseDownColorBar = event => {
@@ -141,7 +144,10 @@
         
         const pos = [event.clientX, event.clientY]
         drawPoint(pos, drawColor, drawSize)
-        pointsArray.push({pos: pos, color: drawColor, r: drawSize})
+        
+        const point = {pos, color: drawColor, r: drawSize}
+        pointsArray.push(point)
+        sendPoint(point)
     }
 
     const mouseMoveColorBar = event => {
@@ -166,6 +172,16 @@
 
     const setColor = xPos => {
         drawColor = `hsl(${xPos*360/300}, 100%, 50%)`
+    }
+
+    const sendPoint = point => {
+        send({
+            type: 'point',
+            data: {
+                point,
+                sessionId: pathname,
+            },
+        })
     }
 
     window.addEventListener('resize', onWindowResize);
