@@ -10,7 +10,7 @@ const nameGenerator = require('username-generator')
 
 const app = express()
 
-const PORT = 3000
+const PORT = 8080
 
 const { NODE_ENV = 'development' } = process.env
 
