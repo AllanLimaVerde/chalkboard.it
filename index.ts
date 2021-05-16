@@ -79,25 +79,47 @@ export interface Req extends express.Request<any> {
 }
 
 const _USER: Users = {}
+const _USER_TO_SOCKET: {
+  [userId: string]: Set<string>
+} = {}
+const _USER_SESSION_SOCKET: {
+  [userId: string]: {
+    [socketId: string]: Set<string>
+  }
+} = {}
+const _SOCKET_SESSION: {
+  [socketId: string]: string
+} = {}
+const _SESSION_SOCKET: {
+  [sessionId: string]: Set<string>
+} = {}
+const _SOCKET_USER: {
+  [socketId: string]: string
+} = {}
 const _SESSION: Sessions = {}
 const _SESSION_USER: {
   [sessionId: string]: Set<string>
 } = {}
-const _CONNECTION: {
+const _SOCKET: {
   [userId: string]: WebSocket
 } = {}
 
 const COOKIE_NAME_USER_ID = 'userId'
 
-function createUser(): string {
-  let user_id = uuidv4()
-  while (_USER[user_id]) {
-    user_id = uuidv4()
+function uuidNotIn(obj: object): string {
+  let id = uuidv4()
+  while (obj[id]) {
+    id = uuidv4()
   }
-  _USER[user_id] = {
-    username: nameGenerator.generateUsername(),
-  }
-  return user_id
+  return id
+}
+
+function newUserId(): string {
+  return uuidNotIn(_USER)
+}
+
+function newSocketId(): string {
+  return uuidNotIn(_SOCKET_USER)
 }
 
 export function parseCookies(str: string): { [name: string]: string } {
@@ -115,7 +137,10 @@ app.use(async function(req: Req, res, next) {
   const { hostname, cookies } = req
   let { [COOKIE_NAME_USER_ID]: userId } = cookies
   if (!userId || !_USER[userId]) {
-    userId = await createUser()
+    userId = await newUserId()
+    _USER[userId] = {
+      username: nameGenerator.generateUsername(),
+    }
     res.cookie(COOKIE_NAME_USER_ID, userId, {
       httpOnly: false,
       domain: hostname,
@@ -151,6 +176,17 @@ const send = (ws: WebSocket, data: any): void => {
   ws.send(value)
 }
 
+const broadcast = (sessionId: string, socketId: string, data: any): void => {
+  const session_socket = _SESSION_SOCKET[sessionId]
+
+  for (const _socketId of session_socket) {
+    if (_socketId !== socketId) {
+      const _ws = _SOCKET[_socketId]
+      send(_ws, data)
+    }
+  }
+}
+
 wss.on('connection', function connection(ws: WebSocket, req: Req) {
   const { headers } = req
 
@@ -165,7 +201,14 @@ wss.on('connection', function connection(ws: WebSocket, req: Req) {
     return
   }
 
-  _CONNECTION[userId] = ws
+  const socketId = newSocketId()
+
+  _SOCKET[socketId] = ws
+
+  _SOCKET_USER[socketId] = userId
+
+  _USER_TO_SOCKET[userId] = _USER_TO_SOCKET[userId] || new Set()
+  _USER_TO_SOCKET[userId].add(socketId)
 
   function _send(data: any): void {
     send(ws, data)
@@ -186,7 +229,7 @@ wss.on('connection', function connection(ws: WebSocket, req: Req) {
             sessionId: string
           }
 
-          console.log('init', userId)
+          // console.log('init', userId)
 
           if (_SESSION[sessionId]) {
             const session = _SESSION[sessionId]
@@ -207,10 +250,23 @@ wss.on('connection', function connection(ws: WebSocket, req: Req) {
           _SESSION_USER[sessionId] = _SESSION_USER[sessionId] || new Set()
           _SESSION_USER[sessionId].add(userId)
 
+          _SOCKET_SESSION[socketId] = sessionId
+
+          _SESSION_SOCKET[sessionId] = _SESSION_SOCKET[sessionId] || new Set()
+          _SESSION_SOCKET[sessionId].add(socketId)
+
+          _USER_SESSION_SOCKET[userId] = _USER_SESSION_SOCKET[userId] || {}
+          _USER_SESSION_SOCKET[userId][sessionId] =
+            _USER_SESSION_SOCKET[userId][sessionId] || new Set()
+
+          _USER_SESSION_SOCKET[userId][sessionId].add(socketId)
+
           break
         }
         case 'point': {
           const { pathPoint, sessionId } = data
+
+          // console.log('point', userId, socketId)
 
           const session = _SESSION[sessionId]
 
@@ -221,28 +277,20 @@ wss.on('connection', function connection(ws: WebSocket, req: Req) {
 
           session.push(userPoint)
 
-          const session_user = _SESSION_USER[sessionId]
-
-          for (const _userId of session_user) {
-            // if (_userId !== userId) {
-              const _ws = _CONNECTION[_userId]
-              send(_ws, { type: 'point', data: { userPoint } })
-            // }
-          }
+          broadcast(sessionId, socketId, {
+            type: 'point',
+            data: { userPoint },
+          })
           break
         }
         case 'clear': {
           const { sessionId } = data
 
+          // console.log('clear', sessionId)
+
           _SESSION[sessionId] = []
 
-          const session_user = _SESSION_USER[sessionId]
-          for (const _userId of session_user) {
-            // if (_userId !== userId) {
-              const _ws = _CONNECTION[_userId]
-              send(_ws, { type: 'clear', data: {} })
-            // }
-          }
+          broadcast(sessionId, socketId, { type: 'clear', data: {} })
           break
         }
       }
@@ -256,7 +304,19 @@ wss.on('connection', function connection(ws: WebSocket, req: Req) {
   })
 
   ws.on('close', () => {
-    delete _CONNECTION[userId]
+    delete _SOCKET[socketId]
+
+    delete _SOCKET_USER[socketId]
+
+    _USER_TO_SOCKET[userId].delete(socketId)
+
+    const sessionId = _SOCKET_SESSION[socketId]
+
+    delete _SOCKET_SESSION[socketId]
+
+    _SESSION_SOCKET[sessionId].delete(socketId)
+
+    _USER_SESSION_SOCKET[userId][sessionId].delete(socketId)
   })
 })
 
