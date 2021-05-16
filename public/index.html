@@ -123,18 +123,18 @@
     <div class="color-bar" id="colorBar">
       <div class="color-picker" id="colorPicker"></div>
     </div>
-    <canvas id="canvas" width="100%" height="100%"></canvas>
+    <canvas id="canvas"></canvas>
   </body>
   <script>
     const BACKGROUND = 'rgb(34, 34, 34)'
 
     const { innerWidth, innerHeight } = window
-
     canvas.width = innerWidth
     canvas.height = innerHeight
+    
     colorPicker.style.left = `150px`
 
-    const ctx = canvas.getContext('2d')
+    let ctx = canvas.getContext('2d')
 
     let color = 'hsl(180, 100%, 50%)'
     let r = 18
@@ -156,6 +156,16 @@
 
     cursor.style.width = `${w}px`
     cursor.style.height = `${h}px`
+
+    const setCursorPosition = (x, y) => {
+      cursorX = x
+      cursorY = y
+
+      cursor.style.left = `${cursorX}px`
+      cursor.style.top = `${cursorY}px`
+    }
+
+    setCursorPosition(innerWidth / 2, r + 12)
 
     cursorInner.style.borderColor = color
 
@@ -279,6 +289,8 @@
 
     console.log('userId', userId)
 
+    
+
     function norm(x, y) {
       return Math.sqrt(x * x + y * y)
     }
@@ -316,7 +328,7 @@
     const throttleRedraw = throttle(() => {
       _clear()
       drawScreen()
-    }, 100)
+    }, 300)
 
     const drawPoint = point => {
       const { pos, color, r } = point
@@ -352,6 +364,7 @@
 
       if (index === lastIndex) {
         drawLineTo(point)
+        drawPoint(point)
       } else {
         // ctx.beginPath()
         drawPoint(point)
@@ -631,14 +644,6 @@
 
       ctx.strokeStyle = color
       cursorInner.style.borderColor = color
-    }
-
-    const setCursorPosition = (x, y) => {
-      cursorX = x
-      cursorY = y
-
-      cursor.style.left = `${cursorX}px`
-      cursor.style.top = `${cursorY}px`
     }
 
     const sendPathPoint = pathPoint => {

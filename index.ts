@@ -10,7 +10,7 @@ const nameGenerator = require('username-generator')
 
 const app = express()
 
-const PORT = 3000
+const PORT = 80
 
 const { NODE_ENV = 'development' } = process.env
 
@@ -151,7 +151,7 @@ app.use(async function(req: Req, res, next) {
 })
 
 app.use(async function(req: Req, res, next) {
-  console.log('req.url', req.url)
+  // console.log('req.url', req.url)
   req.sessionId = req.url
   next()
 })
