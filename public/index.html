@@ -58,7 +58,7 @@
         pointer-events: none;
         width: 12px;
         height: 100%;
-        left: 50%;
+        /* left: 50%; */
         border-radius: 6px;
         /* background: white; */
         border: 3px solid white;
@@ -132,6 +132,7 @@
 
     canvas.width = innerWidth
     canvas.height = innerHeight
+    colorPicker.style.left = `150px`
 
     const ctx = canvas.getContext('2d')
 
@@ -157,6 +158,8 @@
     cursor.style.height = `${h}px`
 
     cursorInner.style.borderColor = color
+
+    let onWheelAction = 0
 
     let pathPoints = []
 
@@ -361,8 +364,10 @@
         canvas.height = innerHeight
     }
 
-    const onPointerDown = ({ clientX, clientY }) => {
+    const onPointerDown = ({ clientX, clientY, pointerId }) => {
       buttonDown = true
+
+      canvas.setPointerCapture(pointerId)
 
       const pos = [clientX, clientY]
       //   const pos = [Math.floor(clientX), Math.floor(clientY)]
@@ -413,6 +418,7 @@
 
     const onPointerUp = event => {
       buttonDown = false
+      canvas.releasePointerCapture(event.pointerId)
     }
 
     const onColorBarPointerDown = event => {
@@ -456,15 +462,34 @@
     }
 
     const onWheel = ({ deltaY }) => {
-      r = clamp(r - deltaY / 30, 1, 300)
+        ctx.beginPath()
+        switch (onWheelAction) {
+            case 0: {
+                r = clamp(r - deltaY / 30, 1, 300)
+        
+                w = 2 * r
+                h = 2 * r
+            
+                ctx.lineWidth = 2 * r
+            
+                cursor.style.width = `${w}px`
+                cursor.style.height = `${h}px`
 
-      w = 2 * r
-      h = 2 * r
+                break
+            }
+            case 1: {
+                console.log(colorPicker.style.left)
+                const barPosition = parseInt(colorPicker.style.left, 10)
 
-      ctx.lineWidth = 2 * r
+                const x = clamp(barPosition - deltaY/5, 0, 300)
+                console.log(barPosition)
 
-      cursor.style.width = `${w}px`
-      cursor.style.height = `${h}px`
+                colorPicker.style.left = `${x}px`
+
+                setColor(x)
+                break
+            }
+        }
     }
 
     let cursorMoveFrame
@@ -517,7 +542,24 @@
         pointerX = innerWidth / 2
         pointerY = r + 12
         
+        buttonDown = false
         animateMoveCursor()
+    }
+
+    const onKeyDown = e => {
+        const { keyCode } = e
+
+        if (keyCode === 16) {
+            onWheelAction = 1
+        }
+    }
+
+    const onKeyUp = e => {
+        const { keyCode } = e
+
+        if (keyCode === 16) {
+            onWheelAction = 0
+        }
     }
 
     const setColor = xPos => {
@@ -549,6 +591,8 @@
 
     document.addEventListener('pointerenter', onDocumentPointerEnter)
     document.addEventListener('pointermove', onDocumentPointerMove)
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('keyup', onKeyUp)
 
     canvas.addEventListener('pointerdown', onPointerDown)
     canvas.addEventListener('pointerup', onPointerUp)
