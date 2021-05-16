@@ -347,6 +347,7 @@
 
     const clear = () => {
       session = []
+
       lastUserIndex = {}
       lastUserPoint = {}
 
@@ -507,10 +508,22 @@
         cursorMoveFrame = requestAnimationFrame(() => {
             const d = distance(pointerX, pointerY, cursorX, cursorY)
 
-            if (d > 3) {
-                const u = unitVector(cursorX, cursorY, pointerX, pointerY)
-                const nextCursorX = cursorX + u.x * d / 5
-                const nextCursorY = cursorY + u.y * d / 5
+            const D = 3
+            const L = 9
+
+            if (d > D) {
+                let nextCursorX
+                let nextCursorY
+                if (d >= D + L) {
+                    const u = unitVector(cursorX, cursorY, pointerX, pointerY)
+                    nextCursorX = cursorX + u.x * d / 5
+                    nextCursorY = cursorY + u.y * d / 5
+                } else {
+                    const dx = cursorX - pointerX
+                    const dy = cursorY - pointerY
+                    nextCursorX = cursorX - dx * (D) / d
+                    nextCursorY = cursorY - dy * (D) / d
+                }
                 setCursorPosition(nextCursorX, nextCursorY)
                 animateMoveCursor()
             } else {
