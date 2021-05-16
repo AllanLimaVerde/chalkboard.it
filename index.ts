@@ -43,14 +43,23 @@ type Point = {
   r: number
 }
 
+type UserPoint = {
+  userId: string
+  pathPoint: PathPoint
+}
+
+type PathPoint = {
+  index: number
+  point: Point
+}
+
+type PathPoints = PathPoint[]
+
+type UserPoints = UserPoint[]
+
 type Points = Point[]
 
-type Session = {
-  [userId: string]: {
-    user: User
-    points: Points
-  }
-}
+type Session = UserPoints
 
 type Sessions = {
   [sessionId: string]: Session
@@ -71,6 +80,9 @@ export interface Req extends express.Request<any> {
 
 const _USER: Users = {}
 const _SESSION: Sessions = {}
+const _SESSION_USER: {
+  [sessionId: string]: Set<string>
+} = {}
 const _CONNECTION: {
   [userId: string]: WebSocket
 } = {}
@@ -134,6 +146,11 @@ const wss = new WebSocket.Server({
   path: '/',
 })
 
+const send = (ws: WebSocket, data: any): void => {
+  const value = JSON.stringify(data)
+  ws.send(value)
+}
+
 wss.on('connection', function connection(ws: WebSocket, req: Req) {
   const { headers } = req
 
@@ -148,79 +165,83 @@ wss.on('connection', function connection(ws: WebSocket, req: Req) {
     return
   }
 
-  console.log('wss', 'connection', userId, user)
-
   _CONNECTION[userId] = ws
 
-  function send(data: any): void {
-    const value = JSON.stringify(data)
-    ws.send(value)
+  function _send(data: any): void {
+    send(ws, data)
   }
 
   ws.on('message', function incoming(message) {
     const data_str = message.toString()
+
     try {
       const _data = JSON.parse(data_str)
+
       const { type, data } = _data
 
       switch (type) {
-        case 'init':
-          ;(() => {
-            const { points, sessionId } = data as {
-              points: Points
-              sessionId: string
-            }
-            console.log('wss', 'message', 'init', sessionId, points)
-            if (!_SESSION[sessionId]) {
-              _SESSION[sessionId] = {}
-              _SESSION[sessionId][userId] = {
-                user,
-                points,
-              }
-            }
+        case 'init': {
+          const { pathPoints, sessionId } = data as {
+            pathPoints: PathPoints
+            sessionId: string
+          }
+
+          if (_SESSION[sessionId]) {
             const session = _SESSION[sessionId]
-            send({
+
+            _send({
               type: 'init',
               data: {
                 session,
               },
             })
-          })()
+          } else {
+            _SESSION[sessionId] = pathPoints.map(pathPoint => ({
+              userId,
+              pathPoint,
+            }))
+          }
+
+          _SESSION_USER[sessionId] = _SESSION_USER[sessionId] || new Set()
+          _SESSION_USER[sessionId].add(userId)
+
           break
-        case 'point':
-          ;(() => {
-            const { point, sessionId } = data
+        }
+        case 'point': {
+          const { pathPoint, sessionId } = data
 
-            console.log('wss', 'message', 'point', sessionId, point)
+          const session = _SESSION[sessionId]
 
-            const session = _SESSION[sessionId]
-            session[userId].points.push(point)
+          const userPoint = {
+            userId,
+            pathPoint,
+          }
 
-            console.log(session)
+          session.push(userPoint)
 
-            for (const _userId in session) {
-              if (_userId !== userId) {
-              }
+          const session_user = _SESSION_USER[sessionId]
+          for (const _userId in session_user) {
+            if (_userId !== userId) {
+              const _ws = _CONNECTION[_userId]
+              send(_ws, { type: 'point', data: { userPoint } })
             }
-          })()
+          }
           break
-        case 'point':
-          ;(() => {
-            const { point, sessionId } = data
+        }
+        case 'clear': {
+          const { sessionId } = data
 
-            console.log('wss', 'message', 'point', sessionId, point)
+          _SESSION[sessionId] = []
 
-            const session = _SESSION[sessionId]
-            session[userId].points.push(point)
-
-            console.log(session)
-
-            for (const _userId in session) {
-              if (_userId !== userId) {
-              }
+          const session_user = _SESSION_USER[sessionId]
+          for (const _userId in session_user) {
+            if (_userId !== userId) {
+              const _ws = _CONNECTION[_userId]
+              send(_ws, { type: 'clear', data: {} })
             }
-          })()
+          }
           break
+        }
       }
     } catch (err) {
       console.error('wss', 'message', 'failed to parse JSON', data_str)

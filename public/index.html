@@ -1,55 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>drawIt</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>chalkboard.it</title>
+    
     <style>
-        body {
-            margin: 0px;
-            padding: 0px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-items: center;
-            touch-action: none;
-        }
+      body {
+        margin: 0px;
+        padding: 0px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-items: center;
+        touch-action: none;
+        overscroll-behavior: none;
+      }
 
-        canvas {
-            box-shadow: rgb(206, 189, 189) 50px 10px 10px;
-            background: rgb(34, 34, 34);
-        }
+      canvas {
+        box-shadow: rgb(206, 189, 189) 50px 10px 10px;
+        background: rgb(34, 34, 34);
+        cursor: none;
+      }
 
-        .color-bar {
-            width: 300px;
-            height: 5%;
-            position: absolute;
-            bottom: 5%;
-            left: 50%;
-            transform: translateX(-50%);
-            border-radius: 6px;
-            /* background-image: linear-gradient(to right, red , orange, yellow, green, blue, indigo, purple, red); */
-            background: linear-gradient(90deg, rgba(255, 0, 0, 1) 0%, rgba(255, 154, 0, 1) 10%, rgba(208, 222, 33, 1) 20%, rgba(79, 220, 74, 1) 30%, rgba(63, 218, 216, 1) 40%, rgba(47, 201, 226, 1) 50%, rgba(28, 127, 238, 1) 60%, rgba(95, 21, 242, 1) 70%, rgba(186, 12, 248, 1) 80%, rgba(251, 7, 217, 1) 90%, rgba(255, 0, 0, 1) 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-        }
+      .color-bar {
+        width: 300px;
+        height: 5%;
+        position: absolute;
+        bottom: 5%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 6px;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 0, 0, 1) 0%,
+          rgba(255, 154, 0, 1) 10%,
+          rgba(208, 222, 33, 1) 20%,
+          rgba(79, 220, 74, 1) 30%,
+          rgba(63, 218, 216, 1) 40%,
+          rgba(47, 201, 226, 1) 50%,
+          rgba(28, 127, 238, 1) 60%,
+          rgba(95, 21, 242, 1) 70%,
+          rgba(186, 12, 248, 1) 80%,
+          rgba(251, 7, 217, 1) 90%,
+          rgba(255, 0, 0, 1) 100%
+        );
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+      }
 
-        .color-picker {
-            position: absolute;
-            pointer-events: none;
-            width: 5%;
-            height: 100%;
-            left: 50%;
-            border-radius: 6px;
-            /* background: white; */
-            border: 3px solid white;
-            box-shadow: rgb(92, 92, 92) 1px 1px 1px;
-            transform: translateX(-50%)
-        }
+      .color-picker {
+        position: absolute;
+        pointer-events: none;
+        width: 5%;
+        height: 100%;
+        left: 50%;
+        border-radius: 6px;
+        /* BACKGROUND: white; */
+        border: 3px solid white;
+        box-shadow: rgb(92, 92, 92) 1px 1px 1px;
+        transform: translateX(-50%);
+      }
 
         .clear-text {
             color: white;
@@ -61,225 +75,91 @@
             cursor: pointer;
             box-shadow: rgb(92, 92, 92) 1px 1px 1px;
         }
+
+        .cursor {
+            position: absolute;
+            border: 3px solid black;
+            background: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .cursor-inner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            border: 3px solid white;
+            background: none;
+            border-radius: 50%;
+            width: calc(100% - 3px);
+            height: calc(100% - 3px);
+            transform: translate(-1.5px, -1.5px);
+            pointer-events: none;
+        }
+
+        .cursor-inner-inner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            border: 1.5px solid black;
+            background: none;
+            border-radius: 50%;
+            width: calc(100% - 3px);
+            height: calc(100% - 3px);
+            pointer-events: none;
+        }
     </style>
-</head>
-
-<body>
-    <div class="clear-text" id="clear-text">
-        <text>Clear<text />
+  </head>
+  <body>
+    <div class="cursor" id="cursor">
+        <div class="cursor-inner" id="cursorInner">
+            <div class="cursor-inner-inner" id="cursorInnerInner">
+            </div>
+        </div>
     </div>
-
-    <div class="color-bar" id="color-bar">
-        <div class="color-picker" id="color-picker"></div>
+    
+    <div class="color-bar" id="colorBar">
+      <div class="color-picker" id="colorPicker"></div>
     </div>
-
-    <canvas id="drawIt" width="100%" height="100%">
-    </canvas>
-</body>
-<script>
-    const canvas = document.querySelector('canvas')
-    const colorBar = document.getElementById('color-bar')
-    const colorPicker = document.getElementById('color-picker')
-    const clearText = document.getElementById('clear-text')
+    <canvas id="canvas" width="100%" height="100%"></canvas>
+  </body>
+  <script>
+    const BACKGROUND = 'rgb(34, 34, 34)'
 
     canvas.width = window.innerWidth
     canvas.height = window.innerHeight
 
     const ctx = canvas.getContext('2d')
 
-    const fps = 10;
-    const background = 'rgb(34, 34, 34)'
-    var drawColor = 'white'
-    var drawSize = 50
+    let color = 'white'
+    let r = 12
 
-    var pointsArray = []
-    var buttonDown = false
-    var buttonDownColorBar = false
+    ctx.lineWidth = 2 * r
+    ctx.strokeStyle = color
+    ctx.lineJoin = 'round'
 
-    const drawPoint = (pos, color = drawColor, size = drawSize) => {
-        ctx.fillStyle = color;
-        ctx.beginPath()
-        ctx.arc(pos[0], pos[1], size, 0, 2 * Math.PI)
-        ctx.fill()
-    }
+    let w = 2 * r
+    let h = 2 * r
 
-    const clearScreen = () => {
-        ctx.fillStyle = background;
-        ctx.fillRect(0, 0, canvas.clientWidth, canvas.height)
-    }
+    cursor.style.width = `${w}px`
+    cursor.style.height = `${h}px`
 
-    const onWindowResize = () => {
-        canvas.width = window.innerWidth
-        canvas.height = window.innerHeight
-    }
+    let pathPoints = []
 
-    const mouseDown = event => {
-        buttonDown = true
-        const pos = [event.clientX, event.clientY]
-        drawPoint(pos, drawColor, drawSize)
+    let session = []
 
-        const point = { pos, color: drawColor, r: drawSize }
-        pointsArray.push(point)
-        sendPoint(point)
-    }
+    let buttonDown = false
+    let buttonDownColorBar = false
 
-    const mouseDownColorBar = event => {
-        buttonDownColorBar = true
+    let lastUserIndex = {}
 
-        colorBar.setPointerCapture(event.pointerId)
+    let lastUserPoint = {}
 
-        colorPicker.style.left = event.offsetX + 'px'
-        setColor(event.offsetX)
-    }
-
-    const mouseUp = event => {
-        buttonDown = false
-    }
-
-    const mouseUpColorBar = event => {
-        buttonDownColorBar = false
-        colorBar.releasePointerCapture(event.pointerId)
-    }
-
-    const mouseMove = event => {
-        if (!buttonDown) return
-
-        const pos = [event.clientX, event.clientY]
-        drawPoint(pos, drawColor, drawSize)
-
-        const point = { pos, color: drawColor, r: drawSize }
-        pointsArray.push(point)
-        sendPoint(point)
-    }
-
-    const mouseMoveColorBar = event => {
-        if (!buttonDownColorBar) return
-
-        const newXPos = Math.min(Math.max(event.offsetX, 0), 300)
-
-        colorPicker.style.left = newXPos + 'px'
-
-        setColor(newXPos)
-    }
-
-    const wheel = event => {
-        drawSize -= event.deltaY / 53
-        if (drawSize < 0) drawSize = 0
-    }
-
-    const mouseDownClearText = () => {
-        posArray = []
-        clearScreen()
-    }
-
-    const setColor = xPos => {
-        drawColor = `hsl(${xPos * 360 / 300}, 100%, 50%)`
-    }
-
-    const sendPoint = point => {
-        send({
-            type: 'point',
-            data: {
-                point,
-                sessionId: pathname,
-            },
-        })
-    }
-
-    window.addEventListener('resize', onWindowResize);
-    canvas.addEventListener('pointerdown', mouseDown)
-    colorBar.addEventListener('pointerdown', mouseDownColorBar)
-    colorBar.addEventListener('pointermove', mouseMoveColorBar)
-    colorBar.addEventListener('pointerup', mouseUpColorBar)
-    clearText.addEventListener('pointerdown', mouseDownClearText)
-    document.addEventListener('pointerup', mouseUp)
-    document.addEventListener('pointermove', mouseMove)
-    document.addEventListener('wheel', wheel)
-
-
-    const drawScreen = () => {
-        console.log('he')
-        pointsArray.forEach(point => {
-            const { pos, color, r } = point
-            drawPoint(pos, color, r)
-        })
-    }
-
-    const { hostname, pathname } = location
-    const userId = getDocumentCookieByName('userId')
-
-    const localhost = hostname === 'localhost'
-
-    const WS_PORT = 4000
-
-    let socket = null
-    let connected = false
-    let connecting = false
-
-    function send(data) {
-        if (!connected) {
-            throw new Error('WebSocket is not connected')
-        }
-        const value = JSON.stringify(data)
-        socket.send(value)
-    }
-
-    function connect() {
-        connecting = true
-
-        let url
-
-        if (localhost) {
-            url = `ws://${hostname}:${WS_PORT}`
-        } else {
-            url = `wss://${hostname}`
-        }
-
-        console.log('socket', 'url', url)
-
-        socket = new WebSocket(url)
-
-        socket.addEventListener('open', function (event) {
-            console.log('socket', 'open')
-            connected = true
-            send({
-                type: 'init',
-                data: {
-                    points: pointsArray,
-                    sessionId: pathname,
-                },
-            })
-        })
-
-        socket.addEventListener('close', function (event) {
-            console.log('socket', 'close')
-            connected = false
-        })
-
-        socket.addEventListener('message', event => {
-            const { data: message } = event
-            const data = JSON.parse(message)
-            // posArray = data.
-                console.log('socket', 'message', data)
-                const { type, data: _data } = data
-                const { session } = _data
-                for (const userId in session) {
-                    const userData = session[userId]
-                    const { points } = userData
-                    pointsArray = points
-                    console.log(pointsArray)
-                    drawScreen()
-                }
-        })
-
-        socket.addEventListener('error', event => {
-            console.log('socket', 'error', event)
-        })
-    }
-
-    function disconnect() {
-        socket.close()
-        socket = null
+    const clamp = (a, min, max) => {
+        return Math.min(Math.max(a, min), max)
     }
 
     function getDocumentCookieByName(name) {
@@ -298,8 +178,337 @@
         return ''
     }
 
+    const userId = getDocumentCookieByName('userId')
+
+    let lastUserId = undefined
+
+    const drawPoint = (point) => {
+        const { pos, color, r } = point
+        ctx.fillStyle = color
+        ctx.lineWidth = 0
+        ctx.strokeStyle = '#00000000'
+        ctx.arc(pos[0], pos[1], r, 0, 2 * Math.PI)
+        ctx.fill()
+        // ctx.stroke()
+    }
+    
+    const drawLineTo = (point) => {
+        const { pos, color, r } = point
+        ctx.strokeStyle = color
+        ctx.lineWidth = 2 * r
+        ctx.lineTo(pos[0], pos[1])
+        ctx.stroke()
+    }
+
+    const drawMoveTo = (point) => {
+        const { pos } = point
+        ctx.moveTo(pos[0], pos[1])
+    }
+
+    const drawPathPoint = (userId, pathPoint) => {
+        const { index, point } = pathPoint
+        
+        let lastPoint = lastUserPoint[userId] || point
+        let lastIndex = lastUserIndex[userId] || -1
+
+        if (lastUserId !== userId) {
+            ctx.beginPath()
+            drawMoveTo(lastPoint)
+        }
+
+        if (index === lastIndex) {
+            drawLineTo(point)
+        } else {
+            ctx.beginPath()
+            drawPoint(point)
+            ctx.beginPath()
+        }
+
+        lastUserId = userId
+
+        lastIndex = index
+        lastPoint = point
+
+        lastUserPoint[userId] = lastPoint
+        lastUserIndex[userId] = lastIndex
+    }
+
+    const drawUserPoint = (userPoint) => {
+        const { userId, pathPoint } = userPoint
+        drawPathPoint(userId, pathPoint)
+    }
+
+    const clear = () => {
+        session = []
+        lastUserIndex = {}
+        lastUserPoint = {}
+
+        _clear()
+    }
+
+
+    const _clear = () => {
+        ctx.fillStyle = BACKGROUND
+        ctx.fillRect(0, 0, canvas.clientWidth, canvas.height)
+    }
+
+    const onWindowResize = () => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+
+    const onPointerDown = ({ clientX, clientY }) => {
+        buttonDown = true
+        
+        // const pos = [clientX, clientY]
+        const pos = [Math.floor(clientX), Math.floor(clientY)]
+
+        const point = { pos, color, r }
+
+        if (lastUserIndex[userId] === undefined) {
+            lastUserIndex[userId] = -1
+        }
+
+        const index = lastUserIndex[userId] + 1
+
+        const pathPoint = { index, point }
+
+        const userPoint = { userId, pathPoint }
+
+        session.push(userPoint)
+
+        drawPathPoint(userId, pathPoint)
+
+        sendPathPoint(pathPoint)
+
+        lastUserIndex[userId] = index
+    }
+
+    const onPointerMove = ({ clientX, clientY }) => {
+      if (buttonDown) {
+        // const pos = [clientX, clientY]
+        const pos = [Math.floor(clientX), Math.floor(clientY)]
+
+        const point = { pos, color, r }
+
+        const index = lastUserIndex[userId]
+
+        const pathPoint = { index, point }
+
+        const userPoint = { userId, pathPoint }
+
+        drawPathPoint(userId, pathPoint)
+
+        session.push(userPoint)
+
+        sendPathPoint(pathPoint)
+      }
+
+      
+    }
+
+    const onPointerUp = event => {
+      buttonDown = false
+    }
+
+    const onColorBarPointerDown = event => {
+      buttonDownColorBar = true
+
+      colorBar.setPointerCapture(event.pointerId)
+
+      colorPicker.style.left = event.offsetX + 'px'
+      
+      setColor(event.offsetX)
+    }
+
+    const onColorBarPointerUp = event => {
+      buttonDownColorBar = false
+      colorBar.releasePointerCapture(event.pointerId)
+    }
+
+    const onColorBarPointerMove = event => {
+      if (!buttonDownColorBar) {
+          return
+      }
+
+      const x = clamp(event.offsetX, 0, 300)
+
+      colorPicker.style.left = `${x}px`
+
+      setColor(x)
+    }
+
+    const onDoubleClick = () => {
+        console.log('onDoubleClick')
+        
+        clear()
+
+        send({
+            type: 'clear',
+            data: {
+                sessionId
+            }
+        })
+    }
+
+    const onWheel = ({ deltaY }) => {
+        r = clamp(r - deltaY / 30, 1, 300)
+
+        w = 2 * r
+        h = 2 * r
+
+        ctx.lineWidth = 2 * r
+        
+        cursor.style.width = `${w}px`
+        cursor.style.height = `${h}px`
+    }
+
+    const onDocumentPointerEnter = ({ clientX, clientY }) => {
+        cursor.style.left = `${clientX}px`
+        cursor.style.top = `${clientY}px`
+    }
+
+    const onDocumentPointerMove = ({ clientX, clientY }) => {
+        cursor.style.left = `${clientX}px`
+        cursor.style.top = `${clientY}px`
+    }
+
+    const setColor = xPos => {
+        color = `hsl(${(xPos * 360) / 300}, 100%, 50%)`
+
+        ctx.strokeStyle = color
+        cursorInner.style.borderColor = color
+    }
+
+    const sendPathPoint = pathPoint => {
+      send({
+        type: 'point',
+        data: {
+            sessionId,
+            pathPoint,
+        },
+      })
+    }
+
+    window.addEventListener('resize', onWindowResize)
+
+    document.addEventListener('pointerenter', onDocumentPointerMove)
+    document.addEventListener('pointermove', onDocumentPointerEnter)
+
+    canvas.addEventListener('pointerdown', onPointerDown)
+    canvas.addEventListener('pointerup', onPointerUp)
+    canvas.addEventListener('pointermove', onPointerMove)
+    canvas.addEventListener('wheel', onWheel)
+    canvas.addEventListener('dblclick', onDoubleClick)
+
+    colorBar.addEventListener('pointerdown', onColorBarPointerDown)
+    colorBar.addEventListener('pointermove', onColorBarPointerMove)
+    colorBar.addEventListener('pointerup', onColorBarPointerUp)
+
+    const drawScreen = () => {
+      session.forEach(point => {
+        const { pos, color, r } = point
+        drawPoint(pos, color, r)
+      })
+    }
+
+    const { hostname, pathname } = location
+
+    const sessionId = pathname
+
+    const localhost = hostname === 'localhost'
+
+    const WS_PORT = 4000
+
+    let socket = null
+    let connected = false
+    let connecting = false
+
+    function send(data) {
+      if (!connected) {
+        throw new Error('WebSocket is not connected')
+      }
+      const value = JSON.stringify(data)
+      socket.send(value)
+    }
+
+    function connect() {
+      connecting = true
+
+      let url
+
+      if (localhost) {
+        url = `ws://${hostname}:${WS_PORT}`
+      } else {
+        url = `wss://${hostname}`
+      }
+
+      console.log('socket', 'url', url)
+
+      socket = new WebSocket(url)
+
+      socket.addEventListener('open', function(event) {
+        console.log('socket', 'open')
+        connected = true
+        send({
+          type: 'init',
+          data: {
+            pathPoints,
+            sessionId,
+          },
+        })
+      })
+
+      socket.addEventListener('close', function(event) {
+        console.log('socket', 'close')
+        connected = false
+      })
+
+      socket.addEventListener('message', event => {
+        const { data: message } = event
+        const data = JSON.parse(message)
+        
+        console.log('socket', 'message', data)
+        
+        const { type, data: _data } = data
+        
+        switch (type) {
+            case 'init':
+                const { session } = _data
+                
+                _clear()
+
+                for (const userPoint of session) {
+                    drawUserPoint(userPoint)
+                }
+                break
+            case 'point':
+                const { userPoint } = _data
+                session.push(userPoint)
+
+                drawUserPoint(userPoint)
+                break
+            case 'clear':
+                session = []
+                _clear()
+
+                break
+            default:
+                break
+        }
+        
+      })
+
+      socket.addEventListener('error', event => {
+        console.log('socket', 'error', event)
+      })
+    }
+
+    function disconnect() {
+      socket.close()
+      socket = null
+    }
 
     connect()
-</script>
-
+  </script>
 </html>
