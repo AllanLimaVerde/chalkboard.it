@@ -320,14 +320,21 @@
       let lastPoint = lastUserPoint[userId] || point
       let lastIndex = lastUserIndex[userId] || 0
 
-      if (lastUserId !== userId) {
-        ctx.beginPath()
-        drawMoveTo(lastPoint)
-      }
+    //   if (lastUserId !== userId) {
+    //     ctx.beginPath()
+    //     drawMoveTo(lastPoint)
+    //   }
 
-      if (lastColor !== color) {
-        ctx.beginPath()
-      }
+    //   if (lastColor !== color) {
+    //     ctx.beginPath()
+    //   }
+
+    //   if (lastColor !== color) {
+    //     ctx.beginPath()
+    //   }
+
+    ctx.beginPath()
+    drawMoveTo(lastPoint)
 
       if (index === lastIndex) {
         drawLineTo(point)
