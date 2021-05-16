@@ -176,6 +176,27 @@
       return Math.min(Math.max(a, min), max)
     }
 
+    const throttle = (func, limit) => {
+      let lastFunc
+      let lastRan
+      return function() {
+        const context = this
+        const args = arguments
+        if (!lastRan) {
+          func.apply(context, args)
+          lastRan = Date.now()
+        } else {
+          clearTimeout(lastFunc)
+          lastFunc = setTimeout(function() {
+            if (Date.now() - lastRan >= limit) {
+              func.apply(context, args)
+              lastRan = Date.now()
+            }
+          }, limit - (Date.now() - lastRan))
+        }
+      }
+    }
+
     // https://github.com/sindresorhus/ip-regex/blob/main/index.js
 
     const word = '[a-fA-F\\d:]'
@@ -286,21 +307,29 @@
       return normalize({ x: 0.5 - Math.random(), y: 0.5 - Math.random() })
     }
 
-    let lastUserId = undefined
-    let lastColor = undefined
+    const drawScreen = () => {
+      session.forEach(userPoint => {
+        drawUserPoint(userPoint)
+      })
+    }
+
+    const throttleRedraw = throttle(() => {
+      _clear()
+      drawScreen()
+    }, 100)
 
     const drawPoint = point => {
       const { pos, color, r } = point
       ctx.fillStyle = color
-      ctx.lineWidth = 0
       ctx.strokeStyle = '#00000000'
+      ctx.lineWidth = 0
       ctx.arc(pos[0], pos[1], r, 0, 2 * Math.PI)
       ctx.fill()
-      // ctx.stroke()
     }
 
     const drawLineTo = point => {
       const { pos, color, r } = point
+      ctx.fillStyle = '#00000000'
       ctx.strokeStyle = color
       ctx.lineWidth = 2 * r
       ctx.lineTo(pos[0], pos[1])
@@ -315,23 +344,8 @@
     const drawPathPoint = (userId, pathPoint) => {
       const { index, point } = pathPoint
 
-      const { color } = point
-
       let lastPoint = lastUserPoint[userId] || point
       let lastIndex = lastUserIndex[userId] || 0
-
-      //   if (lastUserId !== userId) {
-      //     ctx.beginPath()
-      //     drawMoveTo(lastPoint)
-      //   }
-
-      //   if (lastColor !== color) {
-      //     ctx.beginPath()
-      //   }
-
-      //   if (lastColor !== color) {
-      //     ctx.beginPath()
-      //   }
 
       ctx.beginPath()
       drawMoveTo(lastPoint)
@@ -339,13 +353,10 @@
       if (index === lastIndex) {
         drawLineTo(point)
       } else {
-        ctx.beginPath()
+        // ctx.beginPath()
         drawPoint(point)
-        ctx.beginPath()
+        // ctx.beginPath()
       }
-
-      lastUserId = userId
-      lastColor = color
 
       lastIndex = index
       lastPoint = point
@@ -362,16 +373,17 @@
     const clear = () => {
       session = []
 
-      lastUserId = undefined
-      lastColor = undefined
-
-      lastUserIndex = {}
-      lastUserPoint = {}
-
       _clear()
     }
 
     const _clear = () => {
+      lastUserIndex = {}
+      lastUserPoint = {}
+
+      __clear()
+    }
+
+    const __clear = () => {
       ctx.fillStyle = BACKGROUND
       ctx.fillRect(0, 0, canvas.clientWidth, canvas.height)
     }
@@ -380,6 +392,8 @@
       const { innerWidth, innerHeight } = window
       canvas.width = innerWidth
       canvas.height = innerHeight
+
+      throttleRedraw()
     }
 
     const onPointerDown = ({ clientX, clientY, pointerId }) => {
@@ -393,7 +407,7 @@
       const point = { pos, color, r }
 
       if (lastUserIndex[userId] === undefined) {
-        lastUserIndex[userId] = -1
+        lastUserIndex[userId] = 0
       }
 
       const index = lastUserIndex[userId] + 1
@@ -585,20 +599,22 @@
         var element = document.createElement('a')
         const text = JSON.stringify(session)
 
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
-        element.setAttribute('download', filename);
-    
+        element.setAttribute(
+          'href',
+          'data:text/plain;charset=utf-8,' + encodeURIComponent(text)
+        )
+        element.setAttribute('download', filename)
+
         element.style.display = 'none'
         document.body.appendChild(element)
-    
+
         element.click()
-    
+
         document.body.removeChild(element)
       }
 
-
       if (keyCode === 83) {
-        download("session.txt", session);
+        download('chalkboard.it.json', session)
       }
     }
 
@@ -653,12 +669,7 @@
     colorBar.addEventListener('pointermove', onColorBarPointerMove)
     colorBar.addEventListener('pointerup', onColorBarPointerUp)
 
-    const drawScreen = () => {
-      session.forEach(point => {
-        const { pos, color, r } = point
-        drawPoint(pos, color, r)
-      })
-    }
+    
 
     const { hostname, pathname } = location
 
@@ -727,13 +738,11 @@
           case 'init': {
             const { session: _session } = _data
 
-						session = _session
+            session = _session
 
-            _clear()
+            __clear()
 
-            for (const userPoint of session) {
-              drawUserPoint(userPoint)
-            }
+            drawScreen()
             break
           }
           case 'point': {
