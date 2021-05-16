@@ -120,7 +120,6 @@
         <div class="cursor-inner-inner" id="cursorInnerInner"></div>
       </div>
     </div>
-
     <div class="color-bar" id="colorBar">
       <div class="color-picker" id="colorPicker"></div>
     </div>
@@ -129,8 +128,10 @@
   <script>
     const BACKGROUND = 'rgb(34, 34, 34)'
 
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
+    const { innerWidth, innerHeight } = window
+
+    canvas.width = innerWidth
+    canvas.height = innerHeight
 
     const ctx = canvas.getContext('2d')
 
@@ -145,7 +146,11 @@
     let w = 2 * r
     let h = 2 * r
 
+    let cursorX = 0
+    let cursorY = 0
+
     let isCursorOnCanvas = false
+
     const restingPosition = { x: '50%', y: '5vh'}
 
     cursor.style.width = `${w}px`
@@ -238,10 +243,10 @@
       for (let i = 0; i < ca.length; i++) {
         let c = ca[i]
         while (c.charAt(0) == ' ') {
-          c = c.substring(1)
+            c = c.substring(1)
         }
         if (c.indexOf(_name) === 0) {
-          return c.substring(_name.length, c.length)
+            return c.substring(_name.length, c.length)
         }
       }
       return ''
@@ -250,6 +255,34 @@
     const userId = getDocumentCookieByName('userId')
 
     console.log('userId', userId)
+
+    function norm(x, y) {
+        return Math.sqrt(x * x + y * y)
+    }
+
+    function distance(ax, ay, bx, by) {
+        return norm(ax - bx, ay - by)
+    }
+    
+    function normalize(point) {
+        const { x, y } = point
+        const d = norm(point.x, point.y)
+        return { x: x / d, y: y / d }
+    }
+
+    function unitVector(x0, y0, x1, y1) {
+        const dx = x1 - x0
+        const dy = y1 - y0
+        const d = norm(dx, dy)
+        if (d === 0) {
+            return randomUnitVector()
+        }
+        return { x: dx / d, y: dy / d }
+    }
+
+    function randomUnitVector() {
+        return normalize({ x: 0.5 - Math.random(), y: 0.5 - Math.random() })
+    }
 
     let lastUserId = undefined
 
@@ -323,8 +356,9 @@
     }
 
     const onWindowResize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
+        const { innerWidth, innerHeight } = window
+        canvas.width = innerWidth
+        canvas.height = innerHeight
     }
 
     const onPointerDown = ({ clientX, clientY }) => {
@@ -409,7 +443,7 @@
     }
 
     const onDoubleClick = () => {
-      console.log('onDoubleClick')
+    //   console.log('onDoubleClick')
 
       clear()
 
@@ -433,23 +467,57 @@
       cursor.style.height = `${h}px`
     }
 
+    let cursorMoveFrame
+
+    // TODO mobile
+
+    let pointerX = 0
+    let pointerY = 0
+
+    const animateMoveCursor = () => {
+        if (cursorMoveFrame !== undefined) {
+            cancelAnimationFrame(cursorMoveFrame)
+        }
+
+        cursorMoveFrame = requestAnimationFrame(() => {
+            const d = distance(pointerX, pointerY, cursorX, cursorY)
+
+            if (d > 1) {
+                const u = unitVector(cursorX, cursorY, pointerX, pointerY)
+                const nextCursorX = cursorX + u.x * d / 5
+                const nextCursorY = cursorY + u.y * d / 5
+                setCursorPosition(nextCursorX, nextCursorY)
+                animateMoveCursor()
+            } else {
+                setCursorPosition(pointerX, pointerY)
+                cursorMoveFrame = undefined
+            }
+        })
+    }
+
     const onDocumentPointerEnter = ({ clientX, clientY }) => {
-        console.log('pointerenter')
-        cursor.style.transition = 'all 0 ease 0s'
+        // console.log('onDocumentPointerEnter')
+        pointerX = clientX
+        pointerY = clientY
+
+        animateMoveCursor()
     }
 
     const onDocumentPointerMove = ({ clientX, clientY }) => {
-      cursor.style.left = `${clientX}px`
-      cursor.style.top = `${clientY}px`
-      cursor.style.transition = ''
+        pointerX = clientX
+        pointerY = clientY
+
+        if (cursorMoveFrame === undefined) {
+            setCursorPosition(pointerX, pointerY)
+        }
     }
 
     const onPointerLeave = () => {
-        console.log('pointerleft')
-        console.log(restingPosition)
-        cursor.style.transition = 'all 1000ms ease 0s'
-        cursor.style.left = `${restingPosition.x}`
-        cursor.style.top = `${restingPosition.y}`
+        const { innerWidth, innerHeight } = window
+        pointerX = innerWidth / 2
+        pointerY = r + 12
+        
+        animateMoveCursor()
     }
 
     const setColor = xPos => {
@@ -457,6 +525,14 @@
 
       ctx.strokeStyle = color
       cursorInner.style.borderColor = color
+    }
+
+    const setCursorPosition = (x, y) => {
+        cursorX = x
+        cursorY = y
+
+        cursor.style.left = `${cursorX}px`
+        cursor.style.top = `${cursorY}px`
     }
 
     const sendPathPoint = pathPoint => {
