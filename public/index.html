@@ -16,6 +16,7 @@
         justify-items: center;
         touch-action: none;
         overscroll-behavior: none;
+        overflow: hidden;
       }
 
       canvas {
@@ -134,7 +135,7 @@
     const ctx = canvas.getContext('2d')
 
     let color = 'hsl(180, 100%, 50%)'
-    let r = 12
+    let r = 18
 
     ctx.lineWidth = 2 * r
     ctx.strokeStyle = color
@@ -143,6 +144,9 @@
 
     let w = 2 * r
     let h = 2 * r
+
+    let isCursorOnCanvas = false
+    const restingPosition = { x: '50%', y: '5vh'}
 
     cursor.style.width = `${w}px`
     cursor.style.height = `${h}px`
@@ -351,6 +355,8 @@
     }
 
     const onPointerMove = ({ clientX, clientY }) => {
+      isCursorOnCanvas = true
+      
       if (buttonDown) {
         const pos = [clientX, clientY]
         // const pos = [Math.floor(clientX), Math.floor(clientY)]
@@ -428,13 +434,22 @@
     }
 
     const onDocumentPointerEnter = ({ clientX, clientY }) => {
-      cursor.style.left = `${clientX}px`
-      cursor.style.top = `${clientY}px`
+        console.log('pointerenter')
+        cursor.style.transition = 'all 0 ease 0s'
     }
 
     const onDocumentPointerMove = ({ clientX, clientY }) => {
       cursor.style.left = `${clientX}px`
       cursor.style.top = `${clientY}px`
+      cursor.style.transition = ''
+    }
+
+    const onPointerLeave = () => {
+        console.log('pointerleft')
+        console.log(restingPosition)
+        cursor.style.transition = 'all 1000ms ease 0s'
+        cursor.style.left = `${restingPosition.x}`
+        cursor.style.top = `${restingPosition.y}`
     }
 
     const setColor = xPos => {
@@ -456,12 +471,13 @@
 
     window.addEventListener('resize', onWindowResize)
 
-    document.addEventListener('pointerenter', onDocumentPointerMove)
-    document.addEventListener('pointermove', onDocumentPointerEnter)
+    document.addEventListener('pointerenter', onDocumentPointerEnter)
+    document.addEventListener('pointermove', onDocumentPointerMove)
 
     canvas.addEventListener('pointerdown', onPointerDown)
     canvas.addEventListener('pointerup', onPointerUp)
     canvas.addEventListener('pointermove', onPointerMove)
+    canvas.addEventListener('pointerleave', onPointerLeave)
     canvas.addEventListener('wheel', onWheel)
     canvas.addEventListener('dblclick', onDoubleClick)
 
