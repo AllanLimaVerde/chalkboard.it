@@ -581,8 +581,10 @@
         onWheelAction = 1
       }
 
-      function download(filename, text) {
+      function download(filename, session) {
         var element = document.createElement('a')
+        const text = JSON.stringify(session)
+
         element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
         element.setAttribute('download', filename);
     
@@ -596,8 +598,7 @@
 
 
       if (keyCode === 83) {
-          console.log(session)
-        download("session.txt",session);
+        download("session.txt", session);
       }
     }
 
