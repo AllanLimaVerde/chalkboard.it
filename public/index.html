@@ -482,7 +482,7 @@
         cursorMoveFrame = requestAnimationFrame(() => {
             const d = distance(pointerX, pointerY, cursorX, cursorY)
 
-            if (d > 1) {
+            if (d > 3) {
                 const u = unitVector(cursorX, cursorY, pointerX, pointerY)
                 const nextCursorX = cursorX + u.x * d / 5
                 const nextCursorY = cursorY + u.y * d / 5
