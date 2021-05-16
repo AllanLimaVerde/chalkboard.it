@@ -213,7 +213,7 @@
       const { index, point } = pathPoint
 
       let lastPoint = lastUserPoint[userId] || point
-      let lastIndex = lastUserIndex[userId] || -1
+      let lastIndex = lastUserIndex[userId] || 0
 
       if (lastUserId !== userId) {
         ctx.beginPath()
