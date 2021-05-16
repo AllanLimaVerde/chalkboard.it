@@ -186,6 +186,8 @@ wss.on('connection', function connection(ws: WebSocket, req: Req) {
             sessionId: string
           }
 
+          console.log('init', userId)
+
           if (_SESSION[sessionId]) {
             const session = _SESSION[sessionId]
 
@@ -220,11 +222,12 @@ wss.on('connection', function connection(ws: WebSocket, req: Req) {
           session.push(userPoint)
 
           const session_user = _SESSION_USER[sessionId]
-          for (const _userId in session_user) {
-            if (_userId !== userId) {
+
+          for (const _userId of session_user) {
+            // if (_userId !== userId) {
               const _ws = _CONNECTION[_userId]
               send(_ws, { type: 'point', data: { userPoint } })
-            }
+            // }
           }
           break
         }
@@ -234,11 +237,11 @@ wss.on('connection', function connection(ws: WebSocket, req: Req) {
           _SESSION[sessionId] = []
 
           const session_user = _SESSION_USER[sessionId]
-          for (const _userId in session_user) {
-            if (_userId !== userId) {
+          for (const _userId of session_user) {
+            // if (_userId !== userId) {
               const _ws = _CONNECTION[_userId]
               send(_ws, { type: 'clear', data: {} })
-            }
+            // }
           }
           break
         }

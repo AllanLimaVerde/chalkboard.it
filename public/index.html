@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>chalkboard.it</title>
-    
+
     <style>
       body {
         margin: 0px;
@@ -26,7 +26,7 @@
 
       .color-bar {
         width: 300px;
-        height: 5%;
+        height: 30px;
         position: absolute;
         bottom: 5%;
         left: 50%;
@@ -55,7 +55,7 @@
       .color-picker {
         position: absolute;
         pointer-events: none;
-        width: 5%;
+        width: 12px;
         height: 100%;
         left: 50%;
         border-radius: 6px;
@@ -65,62 +65,61 @@
         transform: translateX(-50%);
       }
 
-        .clear-text {
-            color: white;
-            font-size: x-large;
-            text-decoration: underline;
-            position: absolute;
-            bottom: 5%;
-            left: 5%;
-            cursor: pointer;
-            box-shadow: rgb(92, 92, 92) 1px 1px 1px;
-        }
+      .clear-text {
+        color: white;
+        font-size: x-large;
+        text-decoration: underline;
+        position: absolute;
+        bottom: 5%;
+        left: 5%;
+        cursor: pointer;
+        box-shadow: rgb(92, 92, 92) 1px 1px 1px;
+      }
 
-        .cursor {
-            position: absolute;
-            border: 3px solid black;
-            background: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-        }
+      .cursor {
+        position: absolute;
+        border: 4px solid black;
+        background: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
 
-        .cursor-inner {
-            position: absolute;
-            top: 0;
-            left: 0;
-            border: 3px solid white;
-            background: none;
-            border-radius: 50%;
-            width: calc(100% - 3px);
-            height: calc(100% - 3px);
-            transform: translate(-1.5px, -1.5px);
-            pointer-events: none;
-        }
+      .cursor-inner {
+        position: absolute;
+        top: 0;
+        left: 0;
+        border: 4px solid white;
+        background: none;
+        border-radius: 50%;
+        width: calc(100% - 4px);
+        height: calc(100% - 4px);
+        transform: translate(-2px, -2px);
+        pointer-events: none;
+      }
 
-        .cursor-inner-inner {
-            position: absolute;
-            top: 0;
-            left: 0;
-            border: 1.5px solid black;
-            background: none;
-            border-radius: 50%;
-            width: calc(100% - 3px);
-            height: calc(100% - 3px);
-            pointer-events: none;
-        }
+      .cursor-inner-inner {
+        position: absolute;
+        top: 0;
+        left: 0;
+        border: 2px solid black;
+        background: none;
+        border-radius: 50%;
+        width: calc(100% - 4px);
+        height: calc(100% - 4px);
+        pointer-events: none;
+      }
     </style>
   </head>
   <body>
     <div class="cursor" id="cursor">
-        <div class="cursor-inner" id="cursorInner">
-            <div class="cursor-inner-inner" id="cursorInnerInner">
-            </div>
-        </div>
+      <div class="cursor-inner" id="cursorInner">
+        <div class="cursor-inner-inner" id="cursorInnerInner"></div>
+      </div>
     </div>
-    
+
     <div class="color-bar" id="colorBar">
       <div class="color-picker" id="colorPicker"></div>
     </div>
@@ -134,18 +133,21 @@
 
     const ctx = canvas.getContext('2d')
 
-    let color = 'white'
+    let color = 'hsl(180, 100%, 50%)'
     let r = 12
 
     ctx.lineWidth = 2 * r
     ctx.strokeStyle = color
     ctx.lineJoin = 'round'
+    ctx.lineCap = 'round'
 
     let w = 2 * r
     let h = 2 * r
 
     cursor.style.width = `${w}px`
     cursor.style.height = `${h}px`
+
+    cursorInner.style.borderColor = color
 
     let pathPoints = []
 
@@ -159,97 +161,98 @@
     let lastUserPoint = {}
 
     const clamp = (a, min, max) => {
-        return Math.min(Math.max(a, min), max)
+      return Math.min(Math.max(a, min), max)
     }
 
     function getDocumentCookieByName(name) {
-        const _name = name + '='
-        const decodedCookie = decodeURIComponent(document.cookie)
-        const ca = decodedCookie.split(';')
-        for (let i = 0; i < ca.length; i++) {
-            let c = ca[i]
-            while (c.charAt(0) == ' ') {
-                c = c.substring(1)
-            }
-            if (c.indexOf(_name) === 0) {
-                return c.substring(_name.length, c.length)
-            }
+      const _name = name + '='
+      const decodedCookie = decodeURIComponent(document.cookie)
+      const ca = decodedCookie.split(';')
+      for (let i = 0; i < ca.length; i++) {
+        let c = ca[i]
+        while (c.charAt(0) == ' ') {
+          c = c.substring(1)
         }
-        return ''
+        if (c.indexOf(_name) === 0) {
+          return c.substring(_name.length, c.length)
+        }
+      }
+      return ''
     }
 
     const userId = getDocumentCookieByName('userId')
 
+    console.log('userId', userId)
+
     let lastUserId = undefined
 
-    const drawPoint = (point) => {
-        const { pos, color, r } = point
-        ctx.fillStyle = color
-        ctx.lineWidth = 0
-        ctx.strokeStyle = '#00000000'
-        ctx.arc(pos[0], pos[1], r, 0, 2 * Math.PI)
-        ctx.fill()
-        // ctx.stroke()
-    }
-    
-    const drawLineTo = (point) => {
-        const { pos, color, r } = point
-        ctx.strokeStyle = color
-        ctx.lineWidth = 2 * r
-        ctx.lineTo(pos[0], pos[1])
-        ctx.stroke()
+    const drawPoint = point => {
+      const { pos, color, r } = point
+      ctx.fillStyle = color
+      ctx.lineWidth = 0
+      ctx.strokeStyle = '#00000000'
+      ctx.arc(pos[0], pos[1], r, 0, 2 * Math.PI)
+      ctx.fill()
+      // ctx.stroke()
     }
 
-    const drawMoveTo = (point) => {
-        const { pos } = point
-        ctx.moveTo(pos[0], pos[1])
+    const drawLineTo = point => {
+      const { pos, color, r } = point
+      ctx.strokeStyle = color
+      ctx.lineWidth = 2 * r
+      ctx.lineTo(pos[0], pos[1])
+      ctx.stroke()
+    }
+
+    const drawMoveTo = point => {
+      const { pos } = point
+      ctx.moveTo(pos[0], pos[1])
     }
 
     const drawPathPoint = (userId, pathPoint) => {
-        const { index, point } = pathPoint
-        
-        let lastPoint = lastUserPoint[userId] || point
-        let lastIndex = lastUserIndex[userId] || -1
+      const { index, point } = pathPoint
 
-        if (lastUserId !== userId) {
-            ctx.beginPath()
-            drawMoveTo(lastPoint)
-        }
+      let lastPoint = lastUserPoint[userId] || point
+      let lastIndex = lastUserIndex[userId] || -1
 
-        if (index === lastIndex) {
-            drawLineTo(point)
-        } else {
-            ctx.beginPath()
-            drawPoint(point)
-            ctx.beginPath()
-        }
+      if (lastUserId !== userId) {
+        ctx.beginPath()
+        drawMoveTo(lastPoint)
+      }
 
-        lastUserId = userId
+      if (index === lastIndex) {
+        drawLineTo(point)
+      } else {
+        // ctx.beginPath()
+        drawPoint(point)
+        ctx.beginPath()
+      }
 
-        lastIndex = index
-        lastPoint = point
+      lastUserId = userId
 
-        lastUserPoint[userId] = lastPoint
-        lastUserIndex[userId] = lastIndex
+      lastIndex = index
+      lastPoint = point
+
+      lastUserPoint[userId] = lastPoint
+      lastUserIndex[userId] = lastIndex
     }
 
-    const drawUserPoint = (userPoint) => {
-        const { userId, pathPoint } = userPoint
-        drawPathPoint(userId, pathPoint)
+    const drawUserPoint = userPoint => {
+      const { userId, pathPoint } = userPoint
+      drawPathPoint(userId, pathPoint)
     }
 
     const clear = () => {
-        session = []
-        lastUserIndex = {}
-        lastUserPoint = {}
+      session = []
+      lastUserIndex = {}
+      lastUserPoint = {}
 
-        _clear()
+      _clear()
     }
 
-
     const _clear = () => {
-        ctx.fillStyle = BACKGROUND
-        ctx.fillRect(0, 0, canvas.clientWidth, canvas.height)
+      ctx.fillStyle = BACKGROUND
+      ctx.fillRect(0, 0, canvas.clientWidth, canvas.height)
     }
 
     const onWindowResize = () => {
@@ -258,36 +261,36 @@
     }
 
     const onPointerDown = ({ clientX, clientY }) => {
-        buttonDown = true
-        
-        // const pos = [clientX, clientY]
-        const pos = [Math.floor(clientX), Math.floor(clientY)]
+      buttonDown = true
 
-        const point = { pos, color, r }
+      const pos = [clientX, clientY]
+    //   const pos = [Math.floor(clientX), Math.floor(clientY)]
 
-        if (lastUserIndex[userId] === undefined) {
-            lastUserIndex[userId] = -1
-        }
+      const point = { pos, color, r }
 
-        const index = lastUserIndex[userId] + 1
+      if (lastUserIndex[userId] === undefined) {
+        lastUserIndex[userId] = -1
+      }
 
-        const pathPoint = { index, point }
+      const index = lastUserIndex[userId] + 1
 
-        const userPoint = { userId, pathPoint }
+      const pathPoint = { index, point }
 
-        session.push(userPoint)
+      const userPoint = { userId, pathPoint }
 
-        drawPathPoint(userId, pathPoint)
+      session.push(userPoint)
 
-        sendPathPoint(pathPoint)
+      drawPathPoint(userId, pathPoint)
 
-        lastUserIndex[userId] = index
+      sendPathPoint(pathPoint)
+
+      lastUserIndex[userId] = index
     }
 
     const onPointerMove = ({ clientX, clientY }) => {
       if (buttonDown) {
-        // const pos = [clientX, clientY]
-        const pos = [Math.floor(clientX), Math.floor(clientY)]
+        const pos = [clientX, clientY]
+        // const pos = [Math.floor(clientX), Math.floor(clientY)]
 
         const point = { pos, color, r }
 
@@ -303,8 +306,6 @@
 
         sendPathPoint(pathPoint)
       }
-
-      
     }
 
     const onPointerUp = event => {
@@ -317,7 +318,7 @@
       colorBar.setPointerCapture(event.pointerId)
 
       colorPicker.style.left = event.offsetX + 'px'
-      
+
       setColor(event.offsetX)
     }
 
@@ -328,7 +329,7 @@
 
     const onColorBarPointerMove = event => {
       if (!buttonDownColorBar) {
-          return
+        return
       }
 
       const x = clamp(event.offsetX, 0, 300)
@@ -339,53 +340,53 @@
     }
 
     const onDoubleClick = () => {
-        console.log('onDoubleClick')
-        
-        clear()
+      console.log('onDoubleClick')
 
-        send({
-            type: 'clear',
-            data: {
-                sessionId
-            }
-        })
+      clear()
+
+      send({
+        type: 'clear',
+        data: {
+          sessionId,
+        },
+      })
     }
 
     const onWheel = ({ deltaY }) => {
-        r = clamp(r - deltaY / 30, 1, 300)
+      r = clamp(r - deltaY / 30, 1, 300)
 
-        w = 2 * r
-        h = 2 * r
+      w = 2 * r
+      h = 2 * r
 
-        ctx.lineWidth = 2 * r
-        
-        cursor.style.width = `${w}px`
-        cursor.style.height = `${h}px`
+      ctx.lineWidth = 2 * r
+
+      cursor.style.width = `${w}px`
+      cursor.style.height = `${h}px`
     }
 
     const onDocumentPointerEnter = ({ clientX, clientY }) => {
-        cursor.style.left = `${clientX}px`
-        cursor.style.top = `${clientY}px`
+      cursor.style.left = `${clientX}px`
+      cursor.style.top = `${clientY}px`
     }
 
     const onDocumentPointerMove = ({ clientX, clientY }) => {
-        cursor.style.left = `${clientX}px`
-        cursor.style.top = `${clientY}px`
+      cursor.style.left = `${clientX}px`
+      cursor.style.top = `${clientY}px`
     }
 
     const setColor = xPos => {
-        color = `hsl(${(xPos * 360) / 300}, 100%, 50%)`
+      color = `hsl(${(xPos * 360) / 300}, 100%, 50%)`
 
-        ctx.strokeStyle = color
-        cursorInner.style.borderColor = color
+      ctx.strokeStyle = color
+      cursorInner.style.borderColor = color
     }
 
     const sendPathPoint = pathPoint => {
       send({
         type: 'point',
         data: {
-            sessionId,
-            pathPoint,
+          sessionId,
+          pathPoint,
         },
       })
     }
@@ -467,36 +468,37 @@
       socket.addEventListener('message', event => {
         const { data: message } = event
         const data = JSON.parse(message)
-        
+
         console.log('socket', 'message', data)
-        
+
         const { type, data: _data } = data
-        
+
         switch (type) {
-            case 'init':
-                const { session } = _data
-                
-                _clear()
+          case 'init': {
+            const { session } = _data
 
-                for (const userPoint of session) {
-                    drawUserPoint(userPoint)
-                }
-                break
-            case 'point':
-                const { userPoint } = _data
-                session.push(userPoint)
+            _clear()
 
-                drawUserPoint(userPoint)
-                break
-            case 'clear':
-                session = []
-                _clear()
+            for (const userPoint of session) {
+              drawUserPoint(userPoint)
+            }
+            break
+          }
+          case 'point': {
+            const { userPoint } = _data
 
-                break
-            default:
-                break
+            session.push(userPoint)
+
+            drawUserPoint(userPoint)
+            break
+          }
+          case 'clear': {
+            clear()
+            break
+          }
+          default:
+            break
         }
-        
       })
 
       socket.addEventListener('error', event => {
