@@ -176,7 +176,9 @@ app.use(async function(req, res, next) {
 
 const HTTPServer = http.createServer({}, app)
 
-HTTPServer.listen(HTTP_PORT)
+HTTPServer.listen(HTTP_PORT, () => {
+  console.log(`HTTP server listening at port ${HTTP_PORT}`)
+})
 
 // HTTPS
 
@@ -216,7 +218,9 @@ if (prod) {
 
   const HTTPSServer = https.createServer(HTTPSOpt, app)
 
-  HTTPSServer.listen(HTTPS_PORT)
+  HTTPSServer.listen(HTTPS_PORT, () => {
+    console.log(`HTTPS server listening at port ${HTTPS_PORT}`)
+  })
 }
 
 const wss = new WebSocket.Server({
