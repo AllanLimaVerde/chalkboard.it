@@ -289,8 +289,6 @@
 
     console.log('userId', userId)
 
-    
-
     function norm(x, y) {
       return Math.sqrt(x * x + y * y)
     }
@@ -707,7 +705,7 @@
       if (localhost) {
         url = `ws://${hostname}:${WS_PORT}`
       } else {
-        url = `wss://${hostname}`
+        url = `wss://${hostname}:${WS_PORT}`
       }
 
       console.log('socket', 'url', url)
