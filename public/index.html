@@ -705,7 +705,8 @@
       if (localhost) {
         url = `ws://${hostname}:${WS_PORT}`
       } else {
-        url = `wss://${hostname}:${WS_PORT}`
+        // url = `wss://${hostname}:${WS_PORT}`
+        url = `ws://${hostname}:${WS_PORT}`
       }
 
       console.log('socket', 'url', url)
