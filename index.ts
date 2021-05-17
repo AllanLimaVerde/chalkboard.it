@@ -144,6 +144,13 @@ app.use(cors({}))
 
 app.use(cookieParser())
 
+if (prod) {
+  app.enable('trust proxy')
+  app.use((req, res, next) => {
+    req.secure ? next() : res.redirect('https://' + req.headers.host + req.url)
+  })
+}
+
 app.use(async function(req: Req, res, next) {
   const { hostname, cookies } = req
   let { [COOKIE_NAME_USER_ID]: userId } = cookies
@@ -181,7 +188,7 @@ HTTPServer.listen(HTTP_PORT, () => {
 })
 
 const wss = new WebSocket.Server({
-  server: HTTPServer
+  server: HTTPServer,
 })
 
 // HTTPS
@@ -227,7 +234,7 @@ if (prod) {
   })
 
   const wsss = new WebSocket.Server({
-    server: HTTPSServer
+    server: HTTPSServer,
   })
 
   setupWSS(wsss)
