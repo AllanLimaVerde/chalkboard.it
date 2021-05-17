@@ -180,6 +180,10 @@ HTTPServer.listen(HTTP_PORT, () => {
   console.log(`HTTP server listening at port ${HTTP_PORT}`)
 })
 
+const wss = new WebSocket.Server({
+  server: HTTPServer
+})
+
 // HTTPS
 
 if (prod) {
@@ -221,13 +225,13 @@ if (prod) {
   HTTPSServer.listen(HTTPS_PORT, () => {
     console.log(`HTTPS server listening at port ${HTTPS_PORT}`)
   })
-}
 
-const wss = new WebSocket.Server({
-  port: 4000,
-  // noServer: true,
-  path: '/',
-})
+  const wsss = new WebSocket.Server({
+    server: HTTPSServer
+  })
+
+  setupWSS(wsss)
+}
 
 const send = (ws: WebSocket, data: any): void => {
   const value = JSON.stringify(data)
@@ -245,139 +249,143 @@ const broadcast = (sessionId: string, socketId: string, data: any): void => {
   }
 }
 
-wss.on('connection', function connection(ws: WebSocket, req: Req) {
-  const { headers } = req
+function setupWSS(wss) {
+  wss.on('connection', function connection(ws: WebSocket, req: Req) {
+    const { headers } = req
 
-  const { cookie = '' } = headers
-  const cookies = parseCookies(cookie)
-  const { userId } = cookies
+    const { cookie = '' } = headers
+    const cookies = parseCookies(cookie)
+    const { userId } = cookies
 
-  const user = _USER[userId]
+    const user = _USER[userId]
 
-  if (!user) {
-    ws.close()
-    return
-  }
+    if (!user) {
+      ws.close()
+      return
+    }
 
-  const socketId = newSocketId()
+    const socketId = newSocketId()
 
-  _SOCKET[socketId] = ws
+    _SOCKET[socketId] = ws
 
-  _SOCKET_USER[socketId] = userId
+    _SOCKET_USER[socketId] = userId
 
-  _USER_TO_SOCKET[userId] = _USER_TO_SOCKET[userId] || new Set()
-  _USER_TO_SOCKET[userId].add(socketId)
+    _USER_TO_SOCKET[userId] = _USER_TO_SOCKET[userId] || new Set()
+    _USER_TO_SOCKET[userId].add(socketId)
 
-  function _send(data: any): void {
-    send(ws, data)
-  }
+    function _send(data: any): void {
+      send(ws, data)
+    }
 
-  ws.on('message', function incoming(message) {
-    const data_str = message.toString()
+    ws.on('message', function incoming(message) {
+      const data_str = message.toString()
 
-    try {
-      const _data = JSON.parse(data_str)
+      try {
+        const _data = JSON.parse(data_str)
 
-      const { type, data } = _data
+        const { type, data } = _data
 
-      switch (type) {
-        case 'init': {
-          const { pathPoints, sessionId } = data as {
-            pathPoints: PathPoints
-            sessionId: string
+        switch (type) {
+          case 'init': {
+            const { pathPoints, sessionId } = data as {
+              pathPoints: PathPoints
+              sessionId: string
+            }
+
+            // console.log('init', userId)
+
+            if (_SESSION[sessionId]) {
+              const session = _SESSION[sessionId]
+
+              _send({
+                type: 'init',
+                data: {
+                  session,
+                },
+              })
+            } else {
+              _SESSION[sessionId] = pathPoints.map(pathPoint => ({
+                userId,
+                pathPoint,
+              }))
+            }
+
+            _SESSION_USER[sessionId] = _SESSION_USER[sessionId] || new Set()
+            _SESSION_USER[sessionId].add(userId)
+
+            _SOCKET_SESSION[socketId] = sessionId
+
+            _SESSION_SOCKET[sessionId] = _SESSION_SOCKET[sessionId] || new Set()
+            _SESSION_SOCKET[sessionId].add(socketId)
+
+            _USER_SESSION_SOCKET[userId] = _USER_SESSION_SOCKET[userId] || {}
+            _USER_SESSION_SOCKET[userId][sessionId] =
+              _USER_SESSION_SOCKET[userId][sessionId] || new Set()
+
+            _USER_SESSION_SOCKET[userId][sessionId].add(socketId)
+
+            break
           }
+          case 'point': {
+            const { pathPoint, sessionId } = data
 
-          // console.log('init', userId)
+            // console.log('point', userId, socketId)
 
-          if (_SESSION[sessionId]) {
             const session = _SESSION[sessionId]
 
-            _send({
-              type: 'init',
-              data: {
-                session,
-              },
-            })
-          } else {
-            _SESSION[sessionId] = pathPoints.map(pathPoint => ({
+            const userPoint = {
               userId,
               pathPoint,
-            }))
+            }
+
+            session.push(userPoint)
+
+            broadcast(sessionId, socketId, {
+              type: 'point',
+              data: { userPoint },
+            })
+            break
           }
+          case 'clear': {
+            const { sessionId } = data
 
-          _SESSION_USER[sessionId] = _SESSION_USER[sessionId] || new Set()
-          _SESSION_USER[sessionId].add(userId)
+            // console.log('clear', sessionId)
 
-          _SOCKET_SESSION[socketId] = sessionId
+            _SESSION[sessionId] = []
 
-          _SESSION_SOCKET[sessionId] = _SESSION_SOCKET[sessionId] || new Set()
-          _SESSION_SOCKET[sessionId].add(socketId)
-
-          _USER_SESSION_SOCKET[userId] = _USER_SESSION_SOCKET[userId] || {}
-          _USER_SESSION_SOCKET[userId][sessionId] =
-            _USER_SESSION_SOCKET[userId][sessionId] || new Set()
-
-          _USER_SESSION_SOCKET[userId][sessionId].add(socketId)
-
-          break
-        }
-        case 'point': {
-          const { pathPoint, sessionId } = data
-
-          // console.log('point', userId, socketId)
-
-          const session = _SESSION[sessionId]
-
-          const userPoint = {
-            userId,
-            pathPoint,
+            broadcast(sessionId, socketId, { type: 'clear', data: {} })
+            break
           }
-
-          session.push(userPoint)
-
-          broadcast(sessionId, socketId, {
-            type: 'point',
-            data: { userPoint },
-          })
-          break
         }
-        case 'clear': {
-          const { sessionId } = data
-
-          // console.log('clear', sessionId)
-
-          _SESSION[sessionId] = []
-
-          broadcast(sessionId, socketId, { type: 'clear', data: {} })
-          break
-        }
+      } catch (err) {
+        console.error('wss', 'message', 'failed to parse JSON', data_str)
       }
-    } catch (err) {
-      console.error('wss', 'message', 'failed to parse JSON', data_str)
-    }
+    })
+
+    ws.on('pong', () => {
+      // TODO
+    })
+
+    ws.on('close', () => {
+      delete _SOCKET[socketId]
+
+      delete _SOCKET_USER[socketId]
+
+      _USER_TO_SOCKET[userId].delete(socketId)
+
+      const sessionId = _SOCKET_SESSION[socketId]
+
+      delete _SOCKET_SESSION[socketId]
+
+      _SESSION_SOCKET[sessionId].delete(socketId)
+
+      _USER_SESSION_SOCKET[userId][sessionId].delete(socketId)
+    })
   })
 
-  ws.on('pong', () => {
-    // TODO
+  wss.on('close', function close() {
+    console.log('wss', 'close')
   })
+}
 
-  ws.on('close', () => {
-    delete _SOCKET[socketId]
-
-    delete _SOCKET_USER[socketId]
-
-    _USER_TO_SOCKET[userId].delete(socketId)
-
-    const sessionId = _SOCKET_SESSION[socketId]
-
-    delete _SOCKET_SESSION[socketId]
-
-    _SESSION_SOCKET[sessionId].delete(socketId)
-
-    _USER_SESSION_SOCKET[userId][sessionId].delete(socketId)
-  })
-})
-
-wss.on('close', function close() {
-  console.log('wss', 'close')
-})
+setupWSS(wss)

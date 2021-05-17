@@ -674,14 +674,17 @@
 
     
 
-    const { hostname, pathname } = location
+    const { hostname, pathname, protocol } = location
 
+    console.log('protocol', protocol)
     console.log('hostname', hostname)
     console.log('pathname', pathname)
 
     const sessionId = pathname
 
     const localhost = isLocalHost(hostname) || isIp(hostname)
+
+    const secure = protocol === 'https:'
 
     const WS_PORT = 4000
 
@@ -703,10 +706,13 @@
       let url
 
       if (localhost) {
-        url = `ws://${hostname}:${WS_PORT}`
+        url = `ws://${hostname}`
       } else {
-        // url = `wss://${hostname}:${WS_PORT}`
-        url = `ws://${hostname}:${WS_PORT}`
+        if (secure) {
+          url = `wss://${hostname}`
+        } else {
+          url = `ws://${hostname}`
+        }
       }
 
       console.log('socket', 'url', url)
@@ -734,7 +740,7 @@
         const { data: message } = event
         const data = JSON.parse(message)
 
-        // console.log('socket', 'message', data)
+        console.log('socket', 'message', data)
 
         const { type, data: _data } = data
 
