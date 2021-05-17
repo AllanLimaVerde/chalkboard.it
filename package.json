@@ -2,7 +2,7 @@
   "scripts": {
     "start": "NODE_ENV=development nodemon --config nodemon.json",
     "build": "tsc",
-    "prod": "npm run build; sudo NODE_ENV=production node index.js"
+    "prod": "sudo NODE_ENV=production node index.js"
   },
   "dependencies": {
     "cookie-parser": "1.4.5",
@@ -10,7 +10,6 @@
     "express": "4.17.1",
     "is-ip": "3.1.0",
     "ts-node": "^9.1.1",
-    "tsc": "^2.0.3",
     "username-generator": "1.1.0",
     "uuid": "8.3.2",
     "ws": "7.4.5"
@@ -23,6 +22,6 @@
     "tslint": "5.8.0",
     "tslint-config-prettier": "1.6.0",
     "tslint-plugin-prettier": "1.3.0",
-    "typescript": "4.2.4"
+    "typescript": "^4.2.4"
   }
 }
