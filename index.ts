@@ -5,16 +5,27 @@ import * as cookieParser from 'cookie-parser'
 import * as path from 'path'
 import * as cors from 'cors'
 import * as os from 'os'
+import * as fs from 'fs'
+import * as http from 'http'
+import * as https from 'https'
+import * as tls from 'tls'
+import { SecureContext } from 'tls'
+
+type Dict<T = any> = {
+  [name: string]: T
+}
 
 const nameGenerator = require('username-generator')
 
 const app = express()
 
-const PORT = 80
+const HTTP_PORT = 80
+const HTTPS_PORT = 443
 
 const { NODE_ENV = 'development' } = process.env
 
 const dev = NODE_ENV === 'development'
+const prod = NODE_ENV === 'production'
 
 const CWD = process.cwd()
 
@@ -31,7 +42,7 @@ console.log(
     []
   )[0] +
     ':' +
-    PORT
+    HTTP_PORT
 )
 
 console.log('NODE_ENV', NODE_ENV)
@@ -161,9 +172,52 @@ app.use(async function(req, res, next) {
   res.sendFile(INDEX_HTML_PATH)
 })
 
-const server = app.listen(PORT, () => {
-  console.log(`http://localhost:${PORT}`)
-})
+// HTTP
+
+const HTTPServer = http.createServer({}, app)
+
+HTTPServer.listen(HTTP_PORT)
+
+// HTTPS
+
+if (prod) {
+  function getSecureContext(domain: string): SecureContext {
+    return tls.createSecureContext({
+      key: fs.readFileSync(`/etc/letsencrypt/live/${domain}/privkey.pem`),
+      cert: fs.readFileSync(`/etc/letsencrypt/live/${domain}/fullchain.pem`),
+    })
+  }
+
+  const DOMAIN = ['chalkboard.it']
+
+  const secureContext = DOMAIN.reduce(
+    (acc: Dict<tls.SecureContextOptions>, domain: string) => {
+      return { ...acc, [domain]: getSecureContext(domain) }
+    },
+    {}
+  ) as Dict<SecureContext>
+
+  const HTTPSOpt = {
+    SNICallback: function(
+      domain: string,
+      cb: (err: Error | null, ctx: SecureContext) => void
+    ) {
+      const segments = domain.split('.')
+      const l = segments.length
+      const root = `${segments[l - 2]}.${segments[l - 1]}`
+      const ctx: SecureContext = secureContext[root]
+      if (ctx) {
+        cb(null, ctx)
+      } else {
+        cb(new Error(''), null)
+      }
+    },
+  }
+
+  const HTTPSServer = https.createServer(HTTPSOpt, app)
+
+  HTTPSServer.listen(HTTPS_PORT)
+}
 
 const wss = new WebSocket.Server({
   port: 4000,
