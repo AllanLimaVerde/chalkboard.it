@@ -1,7 +1,7 @@
 {
   "scripts": {
     "start": "NODE_ENV=development nodemon --config nodemon.json",
-    "build": "tsc",
+    "build": "./node_modules/typescript/bin/tsc",
     "prod": "sudo NODE_ENV=production node index.js"
   },
   "dependencies": {
