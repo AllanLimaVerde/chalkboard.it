@@ -6,4 +6,5 @@ Access: chalkboard.it
 
 Mouse wheel = change drawing size;
 Mouse wheel + Shift = change drawing color;
-S = saves drawing (no file loading feature yet)
+S = saves drawing (no file loading feature yet);
+Double click to clean board
