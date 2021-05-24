@@ -17,11 +17,11 @@
         touch-action: none;
         overscroll-behavior: none;
         overflow: hidden;
+        background: none transparent;
       }
 
       canvas {
-        box-shadow: rgb(206, 189, 189) 50px 10px 10px;
-        background: rgb(34, 34, 34);
+        background: none transparent;
         cursor: none;
       }
 
@@ -126,7 +126,7 @@
     <canvas id="canvas"></canvas>
   </body>
   <script>
-    const BACKGROUND = 'rgb(34, 34, 34)'
+    const BACKGROUND = '#00000000'
 
     const { innerWidth, innerHeight } = window
     canvas.width = innerWidth
