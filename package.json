@@ -3,7 +3,7 @@
     "start": "NODE_ENV=development nodemon --config nodemon.json",
     "build": "./node_modules/typescript/bin/tsc",
     "prod": "sudo NODE_ENV=production node index.js",
-    "kill": "sudo kill-port 443 80"
+    "kill": "sudo ./node_modules/kill-port/cli.js 443 80"
   },
   "dependencies": {
     "cookie-parser": "1.4.5",
