@@ -175,10 +175,12 @@ app.use(async function(req: Req, res, next) {
   next()
 })
 
-app.use(async function(req, res, next) {
-  const INDEX_HTML_PATH = path.join(CWD, 'public', 'index.html')
-  res.sendFile(INDEX_HTML_PATH)
-})
+// app.use(async function(req, res, next) {
+//   const INDEX_HTML_PATH = path.join(CWD, 'public', 'index.html')
+//   res.sendFile(INDEX_HTML_PATH)
+// })
+
+app.use(express.static('public'))
 
 // HTTP
 
