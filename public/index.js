@@ -1,3 +1,9 @@
+const { body } = document
+
+if (window.location === window.parent.location) {
+  canvas.style.background = '#1f1f1f'
+}
+
 const BACKGROUND = '#00000000'
 
 const { innerWidth, innerHeight } = window
