@@ -45,6 +45,7 @@ console.log(
     HTTP_PORT
 )
 
+console.log(`http://localhost:${HTTP_PORT}`)
 console.log('NODE_ENV', NODE_ENV)
 console.log('CWD', CWD)
 
