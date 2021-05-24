@@ -32,6 +32,7 @@ const CWD = process.cwd();
 console.log(Object.values(os.networkInterfaces()).reduce((r, list) => r.concat(list.reduce((rr, i) => rr.concat((i.family === 'IPv4' && !i.internal && i.address) || []), [])), [])[0] +
     ':' +
     HTTP_PORT);
+console.log(`http://localhost:${HTTP_PORT}`);
 console.log('NODE_ENV', NODE_ENV);
 console.log('CWD', CWD);
 const _USER = {};
