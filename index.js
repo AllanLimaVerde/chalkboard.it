@@ -14,7 +14,6 @@ const express = require("express");
 const WebSocket = require("ws");
 const uuid_1 = require("uuid");
 const cookieParser = require("cookie-parser");
-const path = require("path");
 const cors = require("cors");
 const os = require("os");
 const fs = require("fs");
@@ -99,12 +98,11 @@ app.use(function (req, res, next) {
         next();
     });
 });
-app.use(function (req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const INDEX_HTML_PATH = path.join(CWD, 'public', 'index.html');
-        res.sendFile(INDEX_HTML_PATH);
-    });
-});
+// app.use(async function(req, res, next) {
+//   const INDEX_HTML_PATH = path.join(CWD, 'public', 'index.html')
+//   res.sendFile(INDEX_HTML_PATH)
+// })
+app.use(express.static('public'));
 // HTTP
 const HTTPServer = http.createServer({}, app);
 HTTPServer.listen(HTTP_PORT, () => {
