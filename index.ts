@@ -221,6 +221,7 @@ if (prod) {
       const segments = domain.split('.')
       const l = segments.length
       const root = `${segments[l - 2]}.${segments[l - 1]}`
+      console.log(root)
       const ctx: SecureContext = secureContext[root]
       if (ctx) {
         cb(null, ctx)
